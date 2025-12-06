@@ -6,6 +6,12 @@ const wasmBackend = require("@tensorflow/tfjs-backend-wasm");
 
 const MODEL_VERSION = process.env.MODEL_VERSION || "v1.0";
 
+// Modificacion por prediction = 0
+// --- TUS NÚMEROS MÁGICOS (Copiados de Kaggle) ---
+const MEANS = [5.88535, 5.959026, 5.975218, 11.489071, 2.9896383, 6.517541, 15.568954];
+const VARIANCES = [349.26392, 353.81195, 356.3087, 47.944473, 3.9793808, 11.060944, 75.887474];
+
+
 let model = null;
 let ready = false;
 let inputName = null;
@@ -83,6 +89,23 @@ async function initModel(serverUrl) {
   console.log("[TF] Modelo listo.");
 }
 
+
+
+// Prediction = 0
+/**
+ * Aplica la estandarización (Z-Score) manualmente
+ * Fórmula: (x - media) / raiz(varianza)
+ */
+function standardize(features) {
+  return features.map((val, i) => {
+    const mean = MEANS[i];
+    const std = Math.sqrt(VARIANCES[i]);
+    return (val - mean) / std;
+  });
+}
+
+
+
 /**
  * Ejecuta el modelo con un vector de features
  * Devuelve un escalar >= 0
@@ -95,7 +118,12 @@ async function predict(features) {
     throw new Error(`features must be an array of ${inputDim} numbers`);
   }
 
-  const X = tf.tensor2d([features], [1, inputDim], "float32");
+  // 1. NORMALIZACIÓN MANUAL (prediction = 0)
+  // Convertimos los "29.5" en "0.8" para que la IA los entienda
+  const normalizedFeatures = standardize(features);
+
+
+  const X = tf.tensor2d([normalizedFeatures], [1, inputDim], "float32");
 
   let out;
   if (typeof model.executeAsync === "function") {
