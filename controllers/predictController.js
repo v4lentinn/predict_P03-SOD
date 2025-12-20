@@ -1,6 +1,4 @@
-// controllers/predictController.js
 const { getModelInfo, predict } = require("../services/tfModelService");
-// ✅ NUEVO: Importamos el modelo de base de datos que creaste
 const Prediction = require("../models/Prediction"); 
 
 function health(req, res) {
@@ -30,7 +28,7 @@ async function doPredict(req, res) {
 
     const { features, meta } = req.body;
 
-    // Validaciones (Igual que antes)
+    // Validaciones
     if (!features) return res.status(400).json({ error: "Missing features" });
     if (!meta || typeof meta !== "object") return res.status(400).json({ error: "Missing meta object" });
     
@@ -42,25 +40,22 @@ async function doPredict(req, res) {
       return res.status(400).json({ error: `features must be an array of ${info.inputDim} numbers` });
     }
 
-    // 1. Ejecutar la predicción (IA)
+    // 1. Ejecutar la predicción
     const predictionValue = await predict(features);
     
     const latencyMs = Date.now() - start;
     const timestamp = new Date().toISOString();
 
-    // ✅ NUEVO: Guardar en MongoDB
-    // Creamos la instancia con los datos
+   
     const newPrediction = new Prediction({
         timestamp: timestamp,
         prediction: predictionValue,
         features: features
     });
 
-    // Guardamos y esperamos a que Mongo nos confirme
     const savedPrediction = await newPrediction.save();
     console.log(`[DB] Predicción guardada con ID: ${savedPrediction._id}`);
 
-    // ✅ NUEVO: Ahora devolvemos el ID real de Mongo en lugar de null
     res.status(201).json({
       predictionId: savedPrediction._id, // El ID que acaba de crear Mongo
       prediction: predictionValue,

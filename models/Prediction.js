@@ -1,4 +1,3 @@
-// models/Prediction.js
 const { Schema, model } = require('mongoose');
 
 const PredictionSchema = Schema({
@@ -7,17 +6,16 @@ const PredictionSchema = Schema({
         type: Date,
         default: Date.now
     },
-    // El valor predicho (ej: 3.53)
+    // El valor predicho
     prediction: {
         type: Number,
         required: true
     },
-    // Los datos de entrada (para saber por qué predijo eso)
+    // Los datos de entrada
     features: {
-        type: [Number], // Es un array de números
+        type: [Number],
         required: true
     }
 });
 
-// Exportamos el modelo para usarlo en el controlador
 module.exports = model('Prediction', PredictionSchema);
